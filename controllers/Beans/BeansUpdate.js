@@ -1,3 +1,4 @@
-export const updateBeans = (req, res) => {
-  res.status(200).send("you just updated a bean");
+import bean from "../../models/Beans.js";
+export async function updateBeans (req, res) {
+  res.status(201).send("you just created a bean");
 };
