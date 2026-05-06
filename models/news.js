@@ -1,9 +1,27 @@
-import mongoose from "mongoose";
+import mongoose, { STATES } from "mongoose";
 
-const NewsSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  content: String,
-  source: String,
-}, { timestamps: true });
+const ArticleSchema = new mongoose.Schema(
+       {
+          ID:{
+            type:Number
+          },
+          ArticleName:{
+              type: String,
+              required : true,
+              min:2,
+              max:50,
+            },
 
-export default mongoose.model("News", NewsSchema);
+            trackedParameters:{
+                type:Map,
+                default :{}
+            },
+
+            ArticleLink:{
+                type:String,
+            }
+        }
+);
+
+const News = mongoose.model("News",ArticleSchema);
+export default News;

@@ -1,9 +1,50 @@
-import mongoose from "mongoose";
+import mongoose, { STATES } from "mongoose";
 
-const BrewersSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  type: String,
-  notes: String,
-}, { timestamps: true });
+const BrewerSchema = new mongoose.Schema(
+      {
+        BrewerID:{
+            type:Number,
+        },
+          Name:{
+              type: String,
+              required : true,
+              min:2,
+              max:50,
+            },
+            preferences:{
+              preferedBean:{
+                  type:String,
+              },
+              preferedRatio:{
+                  type:Number,
+                  default:0
+              },
+              preferedGrindSize:{
+                  type:String,
+                  default:"none"
+              },
+              preferedBrewTemp:{
+                  type:Number,
+                  default:100
+              }
+          },
 
-export default mongoose.model("Brewers", BrewersSchema);
+          trackedParameters:{
+              type:Map,
+              default :{}
+          },
+
+          filterType:{
+                type: String,
+                enum:["paper","metal","N/A","cloth"]
+            },
+
+           lastBrew:{
+              NoteID:Number,
+              RecipeID:Number
+            }
+      }
+);
+
+const Brewer = mongoose.model("Brewer",BrewerSchema);
+export default Brewer;

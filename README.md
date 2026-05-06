@@ -31,7 +31,7 @@ npm install
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and fill in your values:
+Copy `.env.example` to `.env` and fill in your values
 
 ```bash
 cp .env.example .env
