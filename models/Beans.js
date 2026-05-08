@@ -1,12 +1,17 @@
-import mongoose, { STATES } from "mongoose";
+import mongoose from "mongoose";
 
 const beanSchema = new mongoose.Schema(
-      {
+      {     
+        beanId:{
+            type:Number,
+            required:true,
+            unique: true,
+        },
           Name:{
               type: String,
               required : true,
-              min:2,
-              max:50,
+              minlength: 2,
+              maxlength: 50,
             },
             Origin:{
                 Country:{
@@ -32,30 +37,16 @@ const beanSchema = new mongoose.Schema(
               default : 0,
             },
             preferences:{
-              preferedBrewers:{
-                  type:String,
-              },
-              preferedRatio:{
-                  type:Number,
-                  default:0
-              },
-              preferedGrindSize:{
-                  type:String,
-                  default:"none"
-              },
-              preferedBrewTemp:{
-                  type:Number,
-                  default:100
-              }
-          },
+              recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
+              Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
+            },
           trackedParameters:{
               type:Map,
               default :{}
           },
           RoastDate:{
-            type: "string",
-            format: "date",
-            default:"none",
+            type: Date,
+            default: Date.now
           },
           tasteProfile: {
               Roast: {
@@ -64,38 +55,17 @@ const beanSchema = new mongoose.Schema(
                   enum:["french","dark","dark-medium","medium","medium-light","light","green"],
               },
               tastingNotes: {
-                  type:Array,
+                  type:[String],
                   default:[]
               },
           },
            lastBrew:{
-              Brewer:{
-                type:String,
-                filterType:{
-                    type: String,
-                    enum:["paper","metal","N/A","cloth"]
-                }
-              },
-              CoffeeIn: Number,
-              WaterIn: Number,
-              WaterTemp:Number,
-              BrewTime:Number,
-              grindSize: Number,
-              bloomTime: Number,
-              Agitation:{
-                type:String,
-                emun:["yes","no"]
-              },
-              tastingNotes: {
-                  type:Array,
-                  default:[]
-              },
-              body:Number,
-              acidity:Number,
-              bitterness:Number,
-              overallRating:Number
+              recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
+              Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
+              note:   { type: mongoose.Schema.Types.ObjectId, ref: "Notes" }
             }
-      }
+      },
+      { timestamps: true }
 );
 
 const bean = mongoose.model("bean",beanSchema);

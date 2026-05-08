@@ -3,13 +3,20 @@ import mongoose, { STATES } from "mongoose";
 const ArticleSchema = new mongoose.Schema(
        {
           ID:{
-            type:Number
+            type:Number,
+            required:true,
+            unique: true,
           },
           ArticleName:{
               type: String,
               required : true,
               min:2,
               max:50,
+            },
+            Author:{
+              type: String,
+              min:2,
+              max:50
             },
 
             trackedParameters:{
@@ -20,7 +27,9 @@ const ArticleSchema = new mongoose.Schema(
             ArticleLink:{
                 type:String,
             }
-        }
+        },
+      { timestamps: true }
+        
 );
 
 const News = mongoose.model("News",ArticleSchema);

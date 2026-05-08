@@ -1,9 +1,14 @@
 import mongoose from "mongoose";
+import Brewer from "./Brewers.js";
+import bean from "./Beans.js";
+import Recipe from "./recipe.js";
 
 const UserSchema = new mongoose.Schema(
       {
         UserID:{
             type:Number,
+            required:true,
+            unique: true,
         },
           firstName:{
               type: String,
@@ -35,20 +40,14 @@ const UserSchema = new mongoose.Schema(
           },
           preferences:{
               preferedBrewers:{
-                  type:String,
+                  type:Brewer,
               },
-              preferedRatio:{
-                  type:Number,
-                  default:0
+              preferedRecipe:{
+                  type:Recipe,
               },
-              preferedGrindSize:{
-                  type:String,
-                  default:"none"
+              preferedBean:{
+                type:bean,
               },
-              preferedBrewTemp:{
-                  type:Number,
-                  default:100
-              }
           },
           trackedParameters:{
               type:Map,
@@ -59,24 +58,6 @@ const UserSchema = new mongoose.Schema(
               enum: ["Bean Sprout ", "Barista", "BrewMaster"],
               default: "Bean Sprout "
           },
-          tasteProfile: {
-              preferredStrength: {
-                  type:String,
-                  default:"none"
-              },
-              preferredBitterness: {
-                  type:String,
-                  default:"none"
-              },
-              preferredAcidity:{
-                  type:String,
-                  default:"none"
-              },
-              preferredBody: {
-                  type:String,
-                  default:"none"
-              },
-          },
           LoginData:{
               lastLogin: Date,
               totalBrewsLogged: Number,
@@ -85,7 +66,8 @@ const UserSchema = new mongoose.Schema(
                   default:0
               },
           }
-      }
+      },
+      { timestamps: true }
 );
 
 const user = mongoose.model("user",UserSchema);

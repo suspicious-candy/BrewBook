@@ -14,7 +14,8 @@ export async function readBeans (req, res) {
 export async function readBeanByID (req, res) {
   try{
     const beans = await bean.findById(req.params.id);
-    res.status(200).json(bean) 
+    if (!beans) return res.status(404).json({ message: "Bean not found" });
+    res.status(200).json(bean);
   }
   catch(error){
     console.error("Error in the bean readBean ID",error);
@@ -24,7 +25,7 @@ export async function readBeanByID (req, res) {
 
 export async function readBeanByRoast(req, res) {
   try{
-    const beans = await bean.findByRoast(req.params.id);
+    const beans = await bean.find({ "tasteProfile.Roast": req.params.roast });
     res.status(200).json(bean) 
   }
   catch(error){
