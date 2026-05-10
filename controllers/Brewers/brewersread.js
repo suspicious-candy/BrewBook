@@ -6,19 +6,19 @@ export async function readBrewers (req, res) {
     res.status(200).json(Brewers) 
   }
   catch(error){
-    console.error("Error in the bean readBrewers",error);
+    console.error("Error in the readBrewers",error);
     res.status(500).json({message:"Internal Server Issue"})
   }
 };
 
 export async function readBrewerByID (req, res) {
   try{
-    const Brewer = await Brewer.findById(req.params.BrewerID);
-    if (!Brewer) return res.status(404).json({ message: "Brewer not found" });
-    res.status(200).json(Brewer);
+    const brewer = await Brewer.findById(req.params.BrewerID);
+    if (!brewer) return res.status(404).json({ message: "Brewer not found" });
+    res.status(200).json(brewer);
   }
   catch(error){
-    console.error("Error in the bean readBrewerByID ID",error);
+    console.error("Error in the readBrewerByID",error);
     res.status(500).json({message:"Internal Server Issue"})
   }
 };
@@ -29,7 +29,7 @@ export async function readBrewerByType(req, res) {
     res.status(200).json(Brewers) 
   }
   catch(error){
-    console.error("Error in the bean readBrewerByType",error);
+    console.error("Error in the readBrewerByType",error);
     res.status(500).json({message:"Internal Server Issue"})
   }
 };
