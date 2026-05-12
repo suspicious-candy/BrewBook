@@ -23,3 +23,24 @@ export async function getUserByID (req, res) {
   }
 };
 
+export async function getUserByEmail(req, res) {
+  try {
+    const User = await user.findOne({ email: req.params.email });
+    if (!User) return res.status(404).json({ message: "user not found" });
+    res.status(200).json(User);
+  } catch (error) {
+    console.error("Error in getUserByEmail", error);
+    res.status(500).json({ message: "Internal Server Issue" });
+  }
+};
+
+export async function getUserByLevel(req, res) {
+  try {
+    const Users = await user.find({ userLevel: req.params.level });
+    res.status(200).json(Users);
+  } catch (error) {
+    console.error("Error in getUserByLevel", error);
+    res.status(500).json({ message: "Internal Server Issue" });
+  }
+};
+

@@ -26,11 +26,31 @@ export async function readBeanByID (req, res) {
 export async function readBeanByRoast(req, res) {
   try{
     const beans = await bean.find({ "tasteProfile.Roast": req.params.roast });
-    res.status(200).json(beans) 
+    res.status(200).json(beans)
   }
   catch(error){
     console.error("Error in the readBeans by roast",error);
     res.status(500).json({message:"Internal Server Issue"})
+  }
+};
+
+export async function readBeanByVarietal(req, res) {
+  try {
+    const beans = await bean.find({ Varietal: req.params.varietal });
+    res.status(200).json(beans);
+  } catch (error) {
+    console.error("Error in readBeanByVarietal", error);
+    res.status(500).json({ message: "Internal Server Issue" });
+  }
+};
+
+export async function readBeanByOriginCountry(req, res) {
+  try {
+    const beans = await bean.find({ "Origin.Country": req.params.country });
+    res.status(200).json(beans);
+  } catch (error) {
+    console.error("Error in readBeanByOriginCountry", error);
+    res.status(500).json({ message: "Internal Server Issue" });
   }
 };
 
