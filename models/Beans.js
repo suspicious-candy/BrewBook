@@ -32,7 +32,7 @@ const beanSchema = new mongoose.Schema(
               type: String,
               default : "wash",
             },
-            ALtitude:{
+            Altitude:{
               type: Number,
               default : 0,
             },
@@ -46,7 +46,9 @@ const beanSchema = new mongoose.Schema(
           },
           RoastDate:{
             type: Date,
-            default: Date.now
+          },
+          Quantity:{
+            type:Number
           },
           tasteProfile: {
               Roast: {

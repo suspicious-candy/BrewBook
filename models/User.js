@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import Brewer from "./Brewers.js";
-import bean from "./Beans.js";
-import Recipe from "./recipe.js";
 
 const UserSchema = new mongoose.Schema(
       {
@@ -40,13 +37,13 @@ const UserSchema = new mongoose.Schema(
           },
           preferences:{
               preferedBrewers:{
-                  type:Brewer,
+                 Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
               },
               preferedRecipe:{
-                  type:Recipe,
+                  Recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
               },
               preferedBean:{
-                type:bean,
+                 bean:   { type: mongoose.Schema.Types.ObjectId, ref: "bean" },
               },
           },
           trackedParameters:{

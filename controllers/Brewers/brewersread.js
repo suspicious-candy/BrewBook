@@ -13,7 +13,7 @@ export async function readBrewers (req, res) {
 
 export async function readBrewerByID (req, res) {
   try{
-    const brewer = await Brewer.findById(req.params.BrewerID);
+    const brewer = await Brewer.findOne({ BrewerID: req.params.id });
     if (!brewer) return res.status(404).json({ message: "Brewer not found" });
     res.status(200).json(brewer);
   }

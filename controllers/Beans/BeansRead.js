@@ -13,7 +13,7 @@ export async function readBeans (req, res) {
 
 export async function readBeanByID (req, res) {
   try{
-    const beans = await bean.findById(req.params.id);
+    const beans = await bean.findOne({beanId : req.params.id});
     if (!beans) return res.status(404).json({ message: "Bean not found" });
     res.status(200).json(beans);
   }

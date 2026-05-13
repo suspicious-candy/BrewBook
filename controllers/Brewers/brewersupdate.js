@@ -2,7 +2,7 @@ import Brewer from "../../models/Brewers.js";
 
 export async function updateBrewers(req, res) {
   try {
-    const updatedBrewer = await Brewer.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updatedBrewer = await Brewer.findOneAndUpdate({BrewerID:req.params.id}, req.body, { new: true, runValidators: true });
     if (!updatedBrewer) return res.status(404).json({ message: "Brewer not found" });
     res.status(200).json(updatedBrewer);
   } catch (error) {
