@@ -2,7 +2,7 @@ import Notes from "../../models/notes.js";
 
 export async function deleteNotes(req, res) {
   try {
-    const deletedNote = await Notes.findByIdAndDelete(req.params.id);
+    const deletedNote = await Notes.findOneAndDelete({ID:req.params.id});
     if (!deletedNote) return res.status(404).json({ message: "Notes not found" });
     res.status(200).json({ message: "Notes deleted successfully" });
   } catch (error) {

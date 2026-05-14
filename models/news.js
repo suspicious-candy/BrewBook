@@ -26,6 +26,9 @@ const ArticleSchema = new mongoose.Schema(
 
             ArticleLink:{
                 type:String,
+            },
+            ArticleBody:{
+                type:String,
             }
         },
       { timestamps: true }

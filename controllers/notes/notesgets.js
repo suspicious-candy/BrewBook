@@ -1,4 +1,6 @@
 import Notes from "../../models/notes.js";
+import Brewer from "../../models/Brewers.js";
+import bean from "../../models/Beans.js";
 
 export async function getNotes (req, res) {
   try{
@@ -13,7 +15,7 @@ export async function getNotes (req, res) {
 
 export async function readNotesByID (req, res) {
   try{
-    const notes = await Notes.findById(req.params.ID);
+    const notes = await Notes.findOne({ID:req.params.id});
     if (!notes) return res.status(404).json({ message: "Notes not found" });
     res.status(200).json(notes);
   }
@@ -25,7 +27,14 @@ export async function readNotesByID (req, res) {
 
 export async function readNotesByBrewer(req, res) {
   try {
-    const notes = await Notes.find({ Brewer: req.params.id });
+    let brewerObjectId;
+    if (req.params.id !== undefined) {
+      const brewer = await Brewer.findOne({ BrewerID : req.params.id });
+
+      if (!brewer) return res.status(404).json({ message: "Brewer not found" });
+      brewerObjectId = brewer._id;
+    }
+    const notes = await Notes.find({ Brewer: brewerObjectId });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in readNotesByBrewer", error);
@@ -35,7 +44,13 @@ export async function readNotesByBrewer(req, res) {
 
 export async function readNotesByBean(req, res) {
   try {
-    const notes = await Notes.find({ bean: req.params.id });
+    let beanObjectId;
+    if (req.params.id !== undefined) {
+      const BeanObj = await bean.findOne({ beanId : req.params.id });
+      if (!BeanObj) return res.status(404).json({ message: "bean not found" });
+      beanObjectId = BeanObj._id;
+    }
+    const notes = await Notes.find({ bean: beanObjectId });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in readNotesByBean", error);

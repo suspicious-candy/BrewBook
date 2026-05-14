@@ -13,7 +13,7 @@ export async function readNews (req, res) {
 
 export async function readNewsByID (req, res) {
   try{
-    const news = await News.findById(req.params.id);
+    const news = await News.findOne({ID:req.params.id});
     if (!news) return res.status(404).json({ message: "News not found" });
     res.status(200).json(news);
   }
