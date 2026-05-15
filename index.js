@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDb } from "./config/db.js";
+import rateLimiter from "./Middleware/rateLimiter.js";
 import beansRoutes from "./Routes/Beans.js";
 import brewersRoutes from "./Routes/Brewers.js";
 import newsRoutes from "./Routes/news.js";
@@ -14,6 +15,12 @@ const app = express();
 
 //middleware
 app.use(express.json());
+
+app.use((req,res,next)=>{
+    console.log("request recieved");
+    next();
+});
+app.use(rateLimiter);
 
 app.use("/beans", beansRoutes);
 app.use("/brewers", brewersRoutes);
