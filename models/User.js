@@ -32,23 +32,19 @@ const UserSchema = new mongoose.Schema(
               min: 10,
           },
           Brewers:{
-              type: Array,
+               type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Brewer" }],
               default :[],
           },
           preferences:{
-              preferedBrewers:{
-                 Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
+              preferedBrewers:{ 
+                 type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Brewer" }],
               },
               preferedRecipe:{
-                  Recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
+                 type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" }],
               },
               preferedBean:{
-                 bean:   { type: mongoose.Schema.Types.ObjectId, ref: "bean" },
+                 type:[{ type: mongoose.Schema.Types.ObjectId, ref: "bean" }],
               },
-          },
-          trackedParameters:{
-              type:Map,
-              default :{}
           },
           userLevel: {
               type: String,
@@ -62,6 +58,10 @@ const UserSchema = new mongoose.Schema(
                   type:Number,
                   default:0
               },
+          },
+          LastBrew:{
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Notes"
           }
       },
       { timestamps: true }

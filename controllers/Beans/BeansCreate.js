@@ -2,8 +2,7 @@ import bean from "../../models/Beans.js";
 
 export async function createBeans(req, res) {
   try {
-    const {beanId,Name,Origin,Varietal,Process,Altitude,preferences,trackedParameters,RoastDate,Quantity,tasteProfile,lastBrew} = req.body;
-    const newBean = new bean({beanId,Name,Origin,Varietal,Process,Altitude,preferences,trackedParameters,RoastDate,Quantity,tasteProfile,lastBrew});
+    const newBean = new bean(req.body);
     const savedBean = await newBean.save();
 
     res.status(201).json(savedBean);

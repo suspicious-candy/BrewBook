@@ -9,6 +9,7 @@ const RecipeSchema = new mongoose.Schema(
     },
     Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
     bean:   { type: mongoose.Schema.Types.ObjectId, ref: "bean" },
+    RecipeBody: String,
     CoffeeIn: Number,
     WaterIn: Number,
     WaterTemp: Number,
@@ -19,9 +20,6 @@ const RecipeSchema = new mongoose.Schema(
       type: String,
       enum: ["yes", "no"],
     },
-    body: Number,
-    acidity: Number,
-    bitterness: Number,
     overallRating: Number,
   },
   { timestamps: true }

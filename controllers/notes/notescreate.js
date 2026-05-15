@@ -1,26 +1,19 @@
 import Notes from "../../models/notes.js";
 import Brewer from "../../models/Brewers.js";
 import bean from "../../models/Beans.js";
+import Recipe from "../../models/recipe.js";
 
 export async function createNotes(req, res) {
   try {
-    const { BrewerID, beanId, ...rest } = req.body;
-
-    let brewerObjectId;
-    if (BrewerID !== undefined) {
-      const brewer = await Brewer.findOne({ BrewerID });
-      if (!brewer) return res.status(404).json({ message: "Brewer not found" });
-      brewerObjectId = brewer._id;
+    const { recipeId, ...rest } = req.body;
+    let recipeObjectId;
+    if (recipeId !== undefined) {
+      const recipeObj = await Recipe.findOne({ ID: recipeId });
+      if (!recipeObj) return res.status(404).json({ message: "Recipe not found" });
+      recipeObjectId = recipeObj._id;
     }
 
-    let beanObjectId;
-    if (beanId !== undefined) {
-      const BeanObj = await bean.findOne({ beanId });
-      if (!BeanObj) return res.status(404).json({ message: "bean not found" });
-      beanObjectId = BeanObj._id;
-    }
-
-    const newNote = new Notes({ ...rest, bean:beanObjectId ,Brewer: brewerObjectId });
+    const newNote = new Notes({ ...rest, Recipe: recipeObjectId });
     const savedNote = await newNote.save();
     res.status(201).json(savedNote);
   } catch (error) {

@@ -1,4 +1,5 @@
 import bean from "../../models/Beans.js";
+import Notes from "../../models/notes.js";
 
 export async function updateBeans(req, res) {
   try {
@@ -13,11 +14,16 @@ export async function updateBeans(req, res) {
 
 export async function updateBeanLastBrew(req, res) {
   try {
-    const { recipe, Brewer, note } = req.body;
-    const updatedBean = await bean.findByIdAndUpdate(
-      req.params.id,
-      { lastBrew: { recipe, Brewer, note } },
-      { new: true, runValidators: true }
+    const { noteId } = req.body;
+    if (noteId === undefined) return res.status(400).json({ message: "noteId is required" });
+
+    const noteObj = await Notes.findOne({ ID: noteId });
+    if (!noteObj) return res.status(404).json({ message: "Note not found" });
+
+    const updatedBean = await bean.findOneAndUpdate(
+      { beanId: req.params.id },
+      { "lastBrew.note": noteObj._id },
+      { new: true }
     );
     if (!updatedBean) return res.status(404).json({ message: "Bean not found" });
     res.status(200).json(updatedBean);

@@ -1,4 +1,4 @@
-import user from "../../models/User.jsx";
+import user from "../../models/User.js";
 
 export async function getUsers (req, res) {
   try{
@@ -13,7 +13,7 @@ export async function getUsers (req, res) {
 
 export async function getUserByID (req, res) {
   try{
-    const User = await user.findById(req.params.UserID);
+    const User = await user.findOne({UserID:req.params.id});
     if (!User) return res.status(404).json({ message: "user not found" });
     res.status(200).json(User);
   }

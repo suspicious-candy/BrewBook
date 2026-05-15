@@ -24,7 +24,6 @@ const BrewerSchema = new mongoose.Schema(
     },
     lastBrew: {
       Note:   { type: mongoose.Schema.Types.ObjectId, ref: "Notes" },
-      Recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
     },
   },
   { timestamps: true }

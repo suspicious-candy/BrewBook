@@ -1,4 +1,4 @@
-import user from "../../models/User.jsx";
+import user from "../../models/User.js";
 
 export async function deleteUsers(req, res) {
   try {

@@ -62,8 +62,6 @@ const beanSchema = new mongoose.Schema(
               },
           },
            lastBrew:{
-              recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
-              Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
               note:   { type: mongoose.Schema.Types.ObjectId, ref: "Notes" }
             }
       },

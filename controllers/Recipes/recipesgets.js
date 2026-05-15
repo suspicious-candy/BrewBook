@@ -1,4 +1,6 @@
 import Recipe from "../../models/recipe.js";
+import Brewer from "../../models/Brewers.js";
+import bean from "../../models/Beans.js";
 
 export async function getRecipes (req, res) {
   try{
@@ -13,7 +15,7 @@ export async function getRecipes (req, res) {
 
 export async function getRecipesByID (req, res) {
   try{
-    const Recipes = await Recipe.findById(req.params.ID);
+    const Recipes = await Recipe.findOne({ID:req.params.id});
     if (!Recipes) return res.status(404).json({ message: "Recipe not found" });
     res.status(200).json(Recipes);
   }
@@ -25,7 +27,14 @@ export async function getRecipesByID (req, res) {
 
 export async function readRecipeByBrewer(req, res) {
   try{
-    const Recipes = await Recipe.find({ "Brewer": req.params.Brewer });
+    let brewerObjectId;
+    if (req.params.id !== undefined) {
+      const brewer = await Brewer.findOne({ BrewerID : req.params.id });
+
+      if (!brewer) return res.status(404).json({ message: "Brewer not found" });
+      brewerObjectId = brewer._id;
+    }
+    const Recipes = await Recipe.find({ Brewer: brewerObjectId });
     res.status(200).json(Recipes) 
   }
   catch(error){
@@ -36,7 +45,13 @@ export async function readRecipeByBrewer(req, res) {
 
 export async function readRecipeByBean(req, res) {
   try{
-    const Recipes = await Recipe.find({ "bean": req.params.bean });
+    let beanObjectId;
+    if (req.params.id !== undefined) {
+      const BeanObj = await bean.findOne({ beanId : req.params.id });
+      if (!BeanObj) return res.status(404).json({ message: "bean not found" });
+      beanObjectId = BeanObj._id;
+    }
+    const Recipes = await Recipe.find({ bean:beanObjectId });
     res.status(200).json(Recipes)
   }
   catch(error){
@@ -47,20 +62,12 @@ export async function readRecipeByBean(req, res) {
 
 export async function readRecipeByMinRating(req, res) {
   try {
-    const Recipes = await Recipe.find({ overallRating: { $gte: Number(req.params.min) } });
+    const min = Number(req.params.min);
+    if (isNaN(min)) return res.status(400).json({ message: "Invalid rating value" });
+    const Recipes = await Recipe.find({ overallRating: { $gte: min } });
     res.status(200).json(Recipes);
   } catch (error) {
     console.error("Error in readRecipeByMinRating", error);
-    res.status(500).json({ message: "Internal Server Issue" });
-  }
-};
-
-export async function readRecipeByGrindSize(req, res) {
-  try {
-    const Recipes = await Recipe.find({ grindSize: Number(req.params.size) });
-    res.status(200).json(Recipes);
-  } catch (error) {
-    console.error("Error in readRecipeByGrindSize", error);
     res.status(500).json({ message: "Internal Server Issue" });
   }
 };
