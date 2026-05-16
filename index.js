@@ -8,6 +8,10 @@ import newsRoutes from "./Routes/news.js";
 import notesRoutes from "./Routes/notes.js";
 import recipesRoutes from "./Routes/recipe.js";
 import usersRoutes from "./Routes/users.js";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import { randomBytes, createHash } from "crypto";
+import { SignJWT, exportJWK, importPKCS8 } from "jose"; 
 
 dotenv.config();
 
@@ -21,6 +25,21 @@ app.use((req,res,next)=>{
     next();
 });
 app.use(rateLimiter);
+
+app.use(bodyParser.urlencoded({extended:false}));
+app.use(bodyParser.json());
+app.use(cookieParser());
+
+const clients = new Map();
+const authorizationCodes= new Map();
+const refreshTokens = new Map();
+
+clients.set("demo-client",{
+    clientId:"demo-client",
+    redirectUris:[`https://localhost:${CLIENT_SERVER_PORT}/callback`]
+});
+
+
 
 app.use("/beans", beansRoutes);
 app.use("/brewers", brewersRoutes);
