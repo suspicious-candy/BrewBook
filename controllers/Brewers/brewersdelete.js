@@ -1,5 +1,10 @@
 import Brewer from "../../models/Brewers.js";
 
+/**
+ * DELETE /brewers/:id
+ * Finds a brewer by its numeric BrewerID and removes it from the database.
+ * Returns 404 if no brewer matches, 200 with a success message on deletion.
+ */
 export async function deleteBrewers(req, res) {
   try {
     const deletedBrewer = await Brewer.findOneAndDelete({BrewerID:req.params.id});

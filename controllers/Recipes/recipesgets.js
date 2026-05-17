@@ -2,6 +2,10 @@ import Recipe from "../../models/recipe.js";
 import Brewer from "../../models/Brewers.js";
 import bean from "../../models/Beans.js";
 
+/**
+ * GET /recipes
+ * Returns all Recipe documents in the collection.
+ */
 export async function getRecipes (req, res) {
   try{
     const Recipes = await Recipe.find();
@@ -13,6 +17,11 @@ export async function getRecipes (req, res) {
   }
 };
 
+/**
+ * GET /recipes/:id
+ * Returns the recipe whose numeric ID matches req.params.id.
+ * Returns 404 if no recipe is found.
+ */
 export async function getRecipesByID (req, res) {
   try{
     const Recipes = await Recipe.findOne({ID:req.params.id});
@@ -25,6 +34,12 @@ export async function getRecipesByID (req, res) {
   }
 };
 
+/**
+ * GET /recipes/brewer/:id
+ * Returns all recipes associated with the brewer whose numeric BrewerID matches
+ * req.params.id. Resolves the BrewerID to an ObjectId before querying. Returns 404
+ * if the brewer is not found.
+ */
 export async function readRecipeByBrewer(req, res) {
   try{
     let brewerObjectId;
@@ -43,6 +58,12 @@ export async function readRecipeByBrewer(req, res) {
   }
 };
 
+/**
+ * GET /recipes/bean/:id
+ * Returns all recipes associated with the bean whose numeric beanId matches
+ * req.params.id. Resolves the beanId to an ObjectId before querying. Returns 404
+ * if the bean is not found.
+ */
 export async function readRecipeByBean(req, res) {
   try{
     let beanObjectId;
@@ -60,6 +81,11 @@ export async function readRecipeByBean(req, res) {
   }
 };
 
+/**
+ * GET /recipes/rating/:min
+ * Returns all recipes whose overallRating is greater than or equal to the
+ * numeric value in req.params.min. Returns 400 if the value is not a valid number.
+ */
 export async function readRecipeByMinRating(req, res) {
   try {
     const min = Number(req.params.min);

@@ -2,6 +2,13 @@ import Recipe from "../../models/recipe.js";
 import Brewer from "../../models/Brewers.js";
 import bean from "../../models/Beans.js";
 
+/**
+ * POST /recipes
+ * Creates a new Recipe document. If BrewerID or beanId are provided in the
+ * request body, they are resolved to MongoDB ObjectIds before saving.
+ * Returns 404 if either referenced document does not exist,
+ * or 500 on a database error.
+ */
 export async function createRecipes(req, res) {
   try {
     const { BrewerID, beanId, ...rest } = req.body;

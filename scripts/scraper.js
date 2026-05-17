@@ -34,6 +34,15 @@ const BREWING_SECTIONS = [
   "Percolat",
 ];
 
+/**
+ * Infers a brewer's filter type from the surrounding paragraph text on the
+ * Wikipedia page. Checks for keywords in this priority order:
+ *   cloth/flannel → "cloth"
+ *   paper filter  → "paper"
+ *   metal/stainless/wire mesh → "metal"
+ *   no filter/unfiltered/grounds/pressure/boil → "N/A"
+ * Defaults to "N/A" when no keyword matches.
+ */
 function inferFilterType(text) {
   const t = text.toLowerCase();
   if (t.includes("cloth") || t.includes("flannel")) return "cloth";
@@ -69,6 +78,13 @@ const SKIP_NAMES = new Set([
   "Gallery",
 ]);
 
+/**
+ * Fetches the Wikipedia "Coffee preparation" page and extracts brewer names
+ * from h2/h3/h4 headings that fall within brewing-related sections (defined by
+ * BREWING_SECTIONS keywords). Falls back to a sequential scan of headings after
+ * the "Brewing methods" h2 if the primary strategy finds nothing.
+ * Returns an array of { name, filterType } objects ready for DB insertion.
+ */
 async function scrape() {
   console.log("Fetching Wikipedia page…");
   const { data: html } = await axios.get(WIKIPEDIA_URL, {
@@ -141,6 +157,12 @@ async function scrape() {
   return candidates;
 }
 
+/**
+ * Main entry point for the scraper script. Connects to MongoDB, determines the
+ * next available BrewerID (to avoid collisions with seeded data), runs the
+ * Wikipedia scraper, and upserts any new brewers by Name — skipping entries
+ * that already exist in the collection. Disconnects when done.
+ */
 async function run() {
   await mongoose.connect(process.env.MONGO_URI);
   console.log("Connected to MongoDB");

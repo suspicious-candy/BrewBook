@@ -1,5 +1,9 @@
 import Brewer from "../../models/Brewers.js";
 
+/**
+ * GET /brewers
+ * Returns all Brewer documents in the collection.
+ */
 export async function readBrewers (req, res) {
   try{
     const Brewers = await Brewer.find();
@@ -11,6 +15,11 @@ export async function readBrewers (req, res) {
   }
 };
 
+/**
+ * GET /brewers/:id
+ * Returns the brewer whose numeric BrewerID matches req.params.id.
+ * Returns 404 if no brewer is found.
+ */
 export async function readBrewerByID (req, res) {
   try{
     const brewer = await Brewer.findOne({ BrewerID: req.params.id });
@@ -23,6 +32,10 @@ export async function readBrewerByID (req, res) {
   }
 };
 
+/**
+ * GET /brewers/filter/:filterType
+ * Filters brewers by filterType field ("paper", "metal", "cloth", or "N/A").
+ */
 export async function readBrewerByType(req, res) {
   try{
     const Brewers = await Brewer.find({ "filterType": req.params.filterType });

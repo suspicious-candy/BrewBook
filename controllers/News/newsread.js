@@ -1,5 +1,9 @@
 import News from "../../models/news.js";
 
+/**
+ * GET /news
+ * Returns all News article documents in the collection.
+ */
 export async function readNews (req, res) {
   try{
     const news = await News.find();
@@ -11,6 +15,11 @@ export async function readNews (req, res) {
   }
 };
 
+/**
+ * GET /news/:id
+ * Returns the news article whose numeric ID matches req.params.id.
+ * Returns 404 if no article is found.
+ */
 export async function readNewsByID (req, res) {
   try{
     const news = await News.findOne({ID:req.params.id});
@@ -23,6 +32,10 @@ export async function readNewsByID (req, res) {
   }
 };
 
+/**
+ * GET /news/author/:Author
+ * Returns all news articles whose Author field matches req.params.Author (case-sensitive).
+ */
 export async function readNewsByAuthor(req, res) {
   try{
     const news = await News.find({ "Author": req.params.Author });

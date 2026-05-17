@@ -1,5 +1,9 @@
 import user from "../../models/User.js";
 
+/**
+ * GET /users
+ * Returns all User documents in the collection.
+ */
 export async function getUsers (req, res) {
   try{
     const User = await user.find();
@@ -11,6 +15,11 @@ export async function getUsers (req, res) {
   }
 };
 
+/**
+ * GET /users/:id
+ * Returns the user whose numeric UserID matches req.params.id.
+ * Returns 404 if no user is found.
+ */
 export async function getUserByID (req, res) {
   try{
     const User = await user.findOne({UserID:req.params.id});
@@ -23,6 +32,11 @@ export async function getUserByID (req, res) {
   }
 };
 
+/**
+ * GET /users/email/:email
+ * Returns the user whose email address matches req.params.email.
+ * Returns 404 if no user is found.
+ */
 export async function getUserByEmail(req, res) {
   try {
     const User = await user.findOne({ email: req.params.email });
@@ -34,6 +48,11 @@ export async function getUserByEmail(req, res) {
   }
 };
 
+/**
+ * GET /users/level/:level
+ * Returns all users whose userLevel matches req.params.level
+ * ("Bean Sprout", "Barista", or "BrewMaster").
+ */
 export async function getUserByLevel(req, res) {
   try {
     const Users = await user.find({ userLevel: req.params.level });

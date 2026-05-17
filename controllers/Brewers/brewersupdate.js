@@ -1,5 +1,10 @@
 import Brewer from "../../models/Brewers.js";
 
+/**
+ * PUT /brewers/:id
+ * Updates a brewer document identified by its numeric BrewerID with the fields in req.body.
+ * Runs Mongoose validators on the updated fields. Returns 404 if the brewer does not exist.
+ */
 export async function updateBrewers(req, res) {
   try {
     const updatedBrewer = await Brewer.findOneAndUpdate({BrewerID:req.params.id}, req.body, { new: true, runValidators: true });

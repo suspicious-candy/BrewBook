@@ -1,5 +1,10 @@
 import News from "../../models/news.js";
 
+/**
+ * DELETE /news/:id
+ * Finds a news article by its numeric ID and removes it from the database.
+ * Returns 404 if no article matches, 200 with a success message on deletion.
+ */
 export async function deleteNews(req, res) {
   try {
     const deletedArticle = await News.findOneAndDelete({ID:req.params.id});

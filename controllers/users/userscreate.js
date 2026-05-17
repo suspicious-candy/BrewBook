@@ -1,6 +1,12 @@
 import user from "../../models/User.js";
 import Brewer from "../../models/Brewers.js";
 
+/**
+ * POST /users
+ * Creates a new User document. If a Brewers array of numeric BrewerIDs is provided,
+ * each ID is resolved to a MongoDB ObjectId; any unrecognised ID returns a 400 error.
+ * Returns the saved document on success, or 500 on a database error.
+ */
 export async function createUsers(req, res) {
   try {
     const { Brewers: brewerIDs, ...rest } = req.body;

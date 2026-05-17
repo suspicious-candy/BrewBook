@@ -1,5 +1,10 @@
 import user from "../../models/User.js";
 
+/**
+ * DELETE /users/:id
+ * Finds a user by their numeric UserID and removes them from the database.
+ * Returns 404 if no user matches, 200 with a success message on deletion.
+ */
 export async function deleteUsers(req, res) {
   try {
     const deletedUser = await user.findOneAndDelete({ UserID: req.params.id });

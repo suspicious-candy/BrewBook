@@ -1,5 +1,10 @@
 import Recipe from "../../models/recipe.js";
 
+/**
+ * DELETE /recipes/:id
+ * Finds a recipe by its numeric ID and removes it from the database.
+ * Returns 404 if no recipe matches, 200 with a success message on deletion.
+ */
 export async function deleteRecipes(req, res) {
   try {
     const deletedRecipe = await Recipe.findOneAndDelete({ID:req.params.id});

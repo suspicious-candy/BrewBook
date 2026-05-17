@@ -3,6 +3,10 @@ import Brewer from "../../models/Brewers.js";
 import bean from "../../models/Beans.js";
 import Recipe from "../../models/recipe.js";
 
+/**
+ * GET /notes
+ * Returns all Notes (tasting note) documents in the collection.
+ */
 export async function getNotes(req, res) {
   try {
     const notes = await Notes.find();
@@ -13,6 +17,11 @@ export async function getNotes(req, res) {
   }
 };
 
+/**
+ * GET /notes/:id
+ * Returns the tasting note whose numeric ID matches req.params.id.
+ * Returns 404 if no note is found.
+ */
 export async function readNotesByID(req, res) {
   try {
     const notes = await Notes.findOne({ ID: req.params.id });
@@ -24,6 +33,13 @@ export async function readNotesByID(req, res) {
   }
 };
 
+/**
+ * GET /notes/brewer/:id
+ * Returns all tasting notes that belong to recipes linked to the brewer
+ * whose numeric BrewerID matches req.params.id. First resolves the brewer,
+ * then fetches matching recipe ObjectIds, then queries notes.
+ * Returns 404 if the brewer is not found.
+ */
 export async function readNotesByBrewer(req, res) {
   try {
     const brewer = await Brewer.findOne({ BrewerID: req.params.id });
@@ -38,6 +54,12 @@ export async function readNotesByBrewer(req, res) {
   }
 };
 
+/**
+ * GET /notes/bean/:id
+ * Returns all tasting notes that belong to recipes linked to the bean whose
+ * numeric beanId matches req.params.id. First resolves the bean, then fetches
+ * matching recipe ObjectIds, then queries notes. Returns 404 if the bean is not found.
+ */
 export async function readNotesByBean(req, res) {
   try {
     const BeanObj = await bean.findOne({ beanId: req.params.id });
@@ -52,6 +74,11 @@ export async function readNotesByBean(req, res) {
   }
 };
 
+/**
+ * GET /notes/recipe/:id
+ * Returns all tasting notes linked to the recipe whose numeric ID matches
+ * req.params.id. Returns 404 if the recipe is not found.
+ */
 export async function readNotesByRecipe(req, res) {
   try {
     const recipeObj = await Recipe.findOne({ ID: req.params.id });
@@ -64,6 +91,11 @@ export async function readNotesByRecipe(req, res) {
   }
 };
 
+/**
+ * GET /notes/rating/:min
+ * Returns all tasting notes whose overallRating is greater than or equal to the
+ * numeric value in req.params.min. Returns 400 if the value is not a valid number.
+ */
 export async function readNotesByMinRating(req, res) {
   try {
     const min = Number(req.params.min);

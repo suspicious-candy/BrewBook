@@ -1,5 +1,10 @@
 import News from "../../models/news.js";
 
+/**
+ * PUT /news/:id
+ * Updates a news article identified by its numeric ID with the fields in req.body.
+ * Runs Mongoose validators on the updated fields. Returns 404 if the article does not exist.
+ */
 export async function updateNews(req, res) {
   try {
     const updatedArticle = await News.findOneAndUpdate({ID:req.params.id}, req.body, { new: true, runValidators: true });

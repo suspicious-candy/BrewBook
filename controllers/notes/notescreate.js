@@ -1,8 +1,12 @@
 import Notes from "../../models/notes.js";
-import Brewer from "../../models/Brewers.js";
-import bean from "../../models/Beans.js";
 import Recipe from "../../models/recipe.js";
 
+/**
+ * POST /notes
+ * Creates a new Notes (tasting note) document. If recipeId is provided in the
+ * request body, it is resolved to a MongoDB ObjectId before saving.
+ * Returns 404 if the referenced recipe does not exist, or 500 on a database error.
+ */
 export async function createNotes(req, res) {
   try {
     const { recipeId, ...rest } = req.body;

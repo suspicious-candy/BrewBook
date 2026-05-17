@@ -32,6 +32,12 @@ const brewers = [
   { BrewerID: 25, Name: "Cores Gold Filter",      filterType: "metal"  },
 ];
 
+/**
+ * Connects to MongoDB and inserts the 25 preset brewer documents defined above.
+ * Each brewer is checked by BrewerID before insertion — existing records are
+ * skipped to make the script safe to re-run without creating duplicates.
+ * Disconnects from the database and prints a summary when complete.
+ */
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI);
   console.log("Connected to MongoDB");

@@ -13,8 +13,9 @@ A REST API backend for tracking coffee brewing sessions. Users can log beans, br
 | Database | MongoDB via Mongoose |
 | Auth | OAuth 2.0 + PKCE, RS256 JWTs (`jose`) |
 | Rate Limiting | Upstash Redis (`@upstash/ratelimit`) |
-| Validation | Zod, Mongoose validators |
-| Password hashing | bcrypt |
+| Security | `helmet`, `hpp`, `express-mongo-sanitize`, `compression` |
+| Validation | Mongoose schema validators |
+| Password hashing | `bcrypt` (installed — hashing not yet wired into user creation) |
 
 ---
 
@@ -40,7 +41,6 @@ Create a `.env` file in the `BrewBook/` directory (see `.env.example`):
 | Variable | Description |
 |---|---|
 | `MONGO_URI` | MongoDB connection string |
-| `JWT_SECRET` | Symmetric secret for legacy HS256 token verification |
 | `PORT` | Port for the main API server (default: `5001`) |
 | `AUTH_SERVER_PORT` | Port for the OAuth auth server (default: `3000`) |
 | `CLIENT_SERVER_PORT` | Port of the OAuth client app (used to whitelist redirect URI) |
@@ -50,6 +50,9 @@ Create a `.env` file in the `BrewBook/` directory (see `.env.example`):
 | `KEY_ID` | Key ID (`kid`) embedded in JWT headers and JWKS |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
+| `CLIENT_ORIGIN` | Allowed CORS origin for the API |
+
+> **Note:** `JWT_SECRET` / `jsonwebtoken` are not used — the implementation uses RS256 via `jose`.
 
 ### Run
 
@@ -63,11 +66,13 @@ npm start
 # Seed the Brewers collection with 25 preset brewers
 npm run seed
 
-# Run the news scraper
+# Run the news scraper (Wikipedia → MongoDB)
 npm run scrape
 ```
 
-The API server starts on `PORT` (default `5001`) and the OAuth server on `AUTH_SERVER_PORT` (default `3000`). Both are served from the same Express app.
+The API server starts on `PORT` (default `5001`) and the OAuth auth flow on `AUTH_SERVER_PORT` (default `3000`). Both are served from the same Express app on different ports.
+
+> **Architecture note:** Both ports share the same Express app instance, so all routes are technically reachable on both ports. For strict port segregation (OAuth on 3000, API on 5001), separate Express apps would be required.
 
 ---
 
@@ -78,6 +83,8 @@ All endpoints return JSON. Errors follow `{ message: "..." }` or `{ error: "..."
 ---
 
 ### Users — `/users`
+
+> **Protected** — all operations require a valid Bearer token.
 
 | Method | Path | Description |
 |---|---|---|
@@ -106,7 +113,7 @@ All endpoints return JSON. Errors follow `{ message: "..." }` or `{ error: "..."
   "Brewers": [1, 2]
 }
 ```
-`Brewers` accepts an array of `BrewerID` numbers and are resolved to ObjectIds.
+`Brewers` accepts an array of `BrewerID` numbers resolved to ObjectIds. Omitting `Brewers` on a PUT leaves the existing brewer list unchanged.
 
 ---
 
@@ -181,6 +188,8 @@ Seed 25 preset brewers (V60, AeroPress, Chemex, etc.) with `npm run seed`.
 ---
 
 ### Notes (Tasting Notes) — `/notes`
+
+> **Protected** — all operations require a valid Bearer token.
 
 | Method | Path | Description |
 |---|---|---|
@@ -330,6 +339,58 @@ Clients are registered in [oauth/clients.js](oauth/clients.js). The default clie
 
 The RS256 public key is exposed at `GET /.well-known/jwks.json`. Consuming services use this to verify access tokens without needing the private key.
 
+### Demo User
+
+The `/oauth/authorize` endpoint currently returns a hardcoded demo user (`demo@example.com`). Replacing `getDemoUser()` in [Routes/authorization.js](Routes/authorization.js) with real credential validation is required before production use.
+
+---
+
+## Resource Server — Protected Routes
+
+### Token Verification
+
+`Middleware/auth.js` verifies incoming Bearer tokens using the **RS256** public key (`PUBLIC_KEY_PEM`). The key is loaded once and cached for the lifetime of the process. On success, the decoded JWT payload is available on `req.user`.
+
+```
+Authorization: Bearer <access_token>
+```
+
+If the token is missing, expired, or invalid the middleware returns `401 Unauthorized`.
+
+### Protected vs Public Routes
+
+| Route prefix | Protected | Reason |
+|---|---|---|
+| `/users` | Yes — all operations | Personal account data |
+| `/notes` | Yes — all operations | Private tasting notes |
+| `/beans` | No | Public catalog |
+| `/brewers` | No | Public catalog |
+| `/recipes` | No | Public catalog |
+| `/news` | No | Public content |
+
+### Architecture Overview
+
+```
+Client (port 4000)
+   │
+   │  1. GET /oauth/authorize?...&code_challenge=S256
+   ▼
+Auth Server (port 3000)   ← /oauth/* routes
+   │  Issues RS256 JWT access_token + refresh_token
+   │
+   │  2. POST /oauth/token → { access_token }
+   ▼
+Client stores token
+   │
+   │  3. GET /users/1   Authorization: Bearer <token>
+   ▼
+Resource Server (port 5001)   ← /users /notes
+   │  Middleware/auth.js verifies RS256 token
+   │  using PUBLIC_KEY_PEM (never the private key)
+   ▼
+   Response: 200 OK / 401 Unauthorized
+```
+
 ---
 
 ## Rate Limiting
@@ -344,6 +405,20 @@ Configured in [config/upstash.js](config/upstash.js) and applied globally in [Mi
 
 ---
 
+## Known Limitations
+
+| Area | Detail |
+|---|---|
+| Password hashing | `bcrypt` is installed but passwords are stored as plaintext. Hash in `userscreate.js` and `usersupdate.js` before production. |
+| Input validation | `zod` is installed but not wired up. Controllers pass `req.body` directly to Mongoose; Mongoose schema validators are the only validation layer. |
+| Mongoose error mapping | All errors (including `ValidationError` 400s) are caught and returned as 500. Add an `error.name === "ValidationError"` check to return 400 with details. |
+| OAuth user authentication | `getDemoUser()` returns a hardcoded user. Real auth (DB lookup + bcrypt) is needed before production. |
+| OAuth token stores | Authorization codes and refresh tokens are stored in in-memory Maps — they are lost on every server restart. Replace with a persistent store (e.g., Redis or MongoDB) for production. |
+| Dual-port routing | Both `PORT` and `AUTH_SERVER_PORT` are served by the same Express app instance, so all routes are accessible on both ports. Use two separate Express apps for strict segregation. |
+| Dead code | `Routes/token.js` and `Routes/.well-known.js` are not mounted in `index.js` — their logic has been merged into `Routes/authorization.js`. |
+
+---
+
 ## Data Models
 
 ### User
@@ -352,7 +427,7 @@ Configured in [config/upstash.js](config/upstash.js) and applied globally in [Mi
 | `UserID` | Number | Required, unique |
 | `firstName` / `lastName` | String | 2–30 chars |
 | `email` | String | Unique, max 50 chars |
-| `password` | String | 10–50 chars |
+| `password` | String | 10–50 chars (store hashed) |
 | `Brewers` | ObjectId[] | Refs to `Brewer` |
 | `preferences` | Object | Preferred brewers, recipes, beans |
 | `userLevel` | String | `Bean Sprout`, `Barista`, `BrewMaster` |
@@ -433,15 +508,15 @@ BrewBook/
 ├── index.js                  # Entry point, Express app, server startup
 ├── config/
 │   ├── db.js                 # Mongoose connection
-│   ├── oauth.js              # PKCE helpers (generateCode, sha256Base64url)
+│   ├── oauth.js              # PKCE helpers (generateCode, sha256Base64url, base64url)
 │   └── upstash.js            # Upstash Redis rate limiter config
 ├── Middleware/
-│   ├── auth.js               # JWT Bearer token verification middleware (HS256)
+│   ├── auth.js               # JWT Bearer token verification middleware (RS256)
 │   └── rateLimiter.js        # Global rate limiter (5 req / 100s per IP)
 ├── Routes/
 │   ├── authorization.js      # OAuth: GET /authorize, POST /token, JWKS handler
-│   ├── .well-known.js        # Standalone JWKS router (not mounted in index.js)
-│   ├── token.js              # Standalone token router (not mounted in index.js)
+│   ├── .well-known.js        # Standalone JWKS router (not mounted — logic is in authorization.js)
+│   ├── token.js              # Standalone token router (not mounted — logic is in authorization.js)
 │   ├── Beans.js
 │   ├── Brewers.js
 │   ├── news.js
@@ -467,5 +542,5 @@ BrewBook/
 │   └── store.js              # In-memory authorization code + refresh token stores
 └── scripts/
     ├── seed.js               # Seeds 25 preset brewers into MongoDB
-    └── scraper.js            # News scraper
+    └── scraper.js            # Scrapes Wikipedia for brewer names and upserts them
 ```

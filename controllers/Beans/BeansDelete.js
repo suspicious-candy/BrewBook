@@ -1,5 +1,10 @@
 import bean from "../../models/Beans.js";
 
+/**
+ * DELETE /beans/:id
+ * Finds a bean by its numeric beanId and removes it from the database.
+ * Returns 404 if no bean matches, 200 with a success message on deletion.
+ */
 export async function deleteBeans(req, res) {
   try {
 

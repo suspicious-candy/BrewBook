@@ -1,5 +1,10 @@
 import bean from "../../models/Beans.js";
 
+/**
+ * POST /beans
+ * Creates a new Bean document from the request body and persists it to MongoDB.
+ * Returns the saved document on success, or 500 on a database error.
+ */
 export async function createBeans(req, res) {
   try {
     const newBean = new bean(req.body);

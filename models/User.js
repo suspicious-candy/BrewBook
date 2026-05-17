@@ -48,8 +48,8 @@ const UserSchema = new mongoose.Schema(
           },
           userLevel: {
               type: String,
-              enum: ["Bean Sprout ", "Barista", "BrewMaster"],
-              default: "Bean Sprout "
+              enum: ["Bean Sprout", "Barista", "BrewMaster"],
+              default: "Bean Sprout"
           },
           LoginData:{
               lastLogin: Date,

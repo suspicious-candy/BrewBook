@@ -1,6 +1,11 @@
 import bean from "../../models/Beans.js";
 import Notes from "../../models/notes.js";
 
+/**
+ * PUT /beans/:id
+ * Updates a bean document identified by its numeric beanId with the fields in req.body.
+ * Runs Mongoose validators on the updated fields. Returns 404 if the bean does not exist.
+ */
 export async function updateBeans(req, res) {
   try {
     const updatedBean = await bean.findOneAndUpdate({beanId:req.params.id}, req.body, { new: true, runValidators: true });
@@ -12,6 +17,12 @@ export async function updateBeans(req, res) {
   }
 }
 
+/**
+ * PATCH /beans/:id/lastBrew
+ * Sets the bean's lastBrew.note reference to the ObjectId of the Note
+ * whose numeric ID matches req.body.noteId.
+ * Returns 400 if noteId is missing, 404 if either the note or bean is not found.
+ */
 export async function updateBeanLastBrew(req, res) {
   try {
     const { noteId } = req.body;

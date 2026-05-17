@@ -1,5 +1,9 @@
 import bean from "../../models/Beans.js";
 
+/**
+ * GET /beans
+ * Returns all Bean documents in the collection.
+ */
 export async function readBeans (req, res) {
   try{
     const beans = await bean.find();
@@ -11,6 +15,11 @@ export async function readBeans (req, res) {
   }
 };
 
+/**
+ * GET /beans/:id
+ * Returns the bean whose numeric beanId matches req.params.id.
+ * Returns 404 if no bean is found.
+ */
 export async function readBeanByID (req, res) {
   try{
     const beans = await bean.findOne({beanId : req.params.id});
@@ -23,6 +32,10 @@ export async function readBeanByID (req, res) {
   }
 };
 
+/**
+ * GET /beans/roast/:roast
+ * Filters beans by tasteProfile.Roast (e.g. "light", "medium", "dark").
+ */
 export async function readBeanByRoast(req, res) {
   try{
     const beans = await bean.find({ "tasteProfile.Roast": req.params.roast });
@@ -34,6 +47,10 @@ export async function readBeanByRoast(req, res) {
   }
 };
 
+/**
+ * GET /beans/varietal/:varietal
+ * Filters beans by their Varietal field (e.g. "Gesha", "Typica").
+ */
 export async function readBeanByVarietal(req, res) {
   try {
     const beans = await bean.find({ Varietal: req.params.varietal });
@@ -44,6 +61,10 @@ export async function readBeanByVarietal(req, res) {
   }
 };
 
+/**
+ * GET /beans/origin/:country
+ * Filters beans by their Origin.Country field (case-sensitive).
+ */
 export async function readBeanByOriginCountry(req, res) {
   try {
     const beans = await bean.find({ "Origin.Country": req.params.country });

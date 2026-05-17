@@ -1,10 +1,12 @@
 import express from "express";
+import { Authorization } from "../Middleware/auth.js";
 import { createUsers } from "../controllers/users/userscreate.js";
 import { deleteUsers } from "../controllers/users/usersdelete.js";
 import { getUsers, getUserByID, getUserByEmail, getUserByLevel } from "../controllers/users/usersgets.js";
 import { updateUsers, updateUserBrewCount } from "../controllers/users/usersupdate.js";
 
 const router = express.Router();
+router.use(Authorization);
 
 router.get("/", getUsers);
 router.get("/email/:email", getUserByEmail);

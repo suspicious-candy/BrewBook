@@ -1,10 +1,12 @@
 import express from "express";
+import { Authorization } from "../Middleware/auth.js";
 import { getNotes, readNotesByID, readNotesByBrewer, readNotesByBean, readNotesByRecipe, readNotesByMinRating } from "../controllers/notes/notesgets.js";
 import { createNotes } from "../controllers/notes/notescreate.js";
 import { deleteNotes } from "../controllers/notes/notesdelete.js";
 import { updateNotes } from "../controllers/notes/notesupdate.js";
 
 const router = express.Router();
+router.use(Authorization);
 
 router.get("/", getNotes);
 router.get("/brewer/:id", readNotesByBrewer);

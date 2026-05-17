@@ -1,6 +1,12 @@
 import Notes from "../../models/notes.js";
 import Recipe from "../../models/recipe.js";
 
+/**
+ * PUT /notes/:id
+ * Updates a tasting note identified by its numeric ID. If recipeId is supplied
+ * in the request body it is resolved to an ObjectId before updating.
+ * Returns 404 if the referenced recipe or the note is not found.
+ */
 export async function updateNotes(req, res) {
   try {
     const { recipeId, ...rest } = req.body;

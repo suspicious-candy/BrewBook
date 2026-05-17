@@ -2,6 +2,12 @@ import Recipe from "../../models/recipe.js";
 import Brewer from "../../models/Brewers.js";
 import bean from "../../models/Beans.js";
 
+/**
+ * PUT /recipes/:id
+ * Updates a recipe identified by its numeric ID. If beanId or BrewerID are
+ * supplied in the request body they are resolved to ObjectIds before updating.
+ * Returns 404 if the referenced bean, brewer, or recipe is not found.
+ */
 export async function updateRecipes(req, res) {
   try {
     const { beanId, BrewerID, ...rest } = req.body;
