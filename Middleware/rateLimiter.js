@@ -1,7 +1,7 @@
 import ratelimit from "../config/upstash.js"
 const rateLimiter = async (req, res, next) => {
     try{
-        const {success} = await ratelimit.limit(userid);
+        const {success} = await ratelimit.limit(req.ip ?? "anonymous");
 
         if(!success){
             return res.status(429).json({

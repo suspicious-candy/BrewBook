@@ -1,4 +1,4 @@
-import mongoose, { STATES } from "mongoose";
+import mongoose from "mongoose";
 
 const ArticleSchema = new mongoose.Schema(
        {
@@ -10,13 +10,13 @@ const ArticleSchema = new mongoose.Schema(
           ArticleName:{
               type: String,
               required : true,
-              min:2,
-              max:50,
+              minlength:2,
+              maxlength:50,
             },
             Author:{
               type: String,
-              min:2,
-              max:50
+              minlength:2,
+              maxlength:50
             },
 
             trackedParameters:{

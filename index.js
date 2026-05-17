@@ -10,37 +10,26 @@ import recipesRoutes from "./Routes/recipe.js";
 import usersRoutes from "./Routes/users.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
-import { randomBytes, createHash } from "crypto";
-import { SignJWT, exportJWK, importPKCS8 } from "jose"; 
+import authorizationRoutes, { jwksHandler } from "./Routes/authorization.js";
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT;
+const AUTH_SERVER_PORT = process.env.AUTH_SERVER_PORT;
 
-//middleware
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-app.use((req,res,next)=>{
+app.use((req, res, next) => {
     console.log("request recieved");
     next();
 });
 app.use(rateLimiter);
 
-app.use(bodyParser.urlencoded({extended:false}));
-app.use(bodyParser.json());
-app.use(cookieParser());
-
-const clients = new Map();
-const authorizationCodes= new Map();
-const refreshTokens = new Map();
-
-clients.set("demo-client",{
-    clientId:"demo-client",
-    redirectUris:[`https://localhost:${CLIENT_SERVER_PORT}/callback`]
-});
-
-
-
+app.get("/.well-known/jwks.json", jwksHandler);
+app.use("/oauth", authorizationRoutes);
 app.use("/beans", beansRoutes);
 app.use("/brewers", brewersRoutes);
 app.use("/news", newsRoutes);
@@ -50,5 +39,5 @@ app.use("/users", usersRoutes);
 
 connectDb();
 
-const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`API server running on port ${PORT}`));
+app.listen(AUTH_SERVER_PORT, () => console.log(`Auth server running on port ${AUTH_SERVER_PORT}`));

@@ -28,7 +28,7 @@ export async function updateUsers(req, res) {
 export async function updateUserBrewCount(req, res) {
   try {
     const updatedUser = await user.findOneAndUpdate(
-      req.params.id,
+      { UserID: req.params.id },
       { $inc: { "LoginData.totalBrewsLogged": 1 } },
       { new: true }
     );

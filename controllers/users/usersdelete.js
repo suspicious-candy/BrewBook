@@ -2,7 +2,7 @@ import user from "../../models/User.js";
 
 export async function deleteUsers(req, res) {
   try {
-    const deletedUser = await user.findByIdAndDelete(req.params.id);
+    const deletedUser = await user.findOneAndDelete({ UserID: req.params.id });
     if (!deletedUser) return res.status(404).json({ message: "user not found" });
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {

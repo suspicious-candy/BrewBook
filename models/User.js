@@ -10,26 +10,26 @@ const UserSchema = new mongoose.Schema(
           firstName:{
               type: String,
               required : true,
-              min:2,
-              max:30,
+              minlength:2,
+              maxlength:30,
           },
           lastName:{
               type: String,
               required : true,
-              min:2,
-              max:30,
+              minlength:2,
+              maxlength:30,
           },
           email:{
               type: String,
               required : true,
-              max:50,
+              maxlength:50,
               unique : true,
           },
           password:{
               type: String,
               required : true,
-              max:50,
-              min: 10,
+              maxlength:50,
+              minlength: 10,
           },
           Brewers:{
                type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Brewer" }],
