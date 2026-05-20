@@ -5,5 +5,5 @@ export const clients = new Map();
 
 clients.set("demo-client", {
   clientId: "demo-client",
-  redirectUris: [`https://localhost:${process.env.CLIENT_SERVER_PORT}/callback`]
+  redirectUris: [`${process.env.CLIENT_ORIGIN}/callback`]
 });

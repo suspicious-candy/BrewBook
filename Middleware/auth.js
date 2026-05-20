@@ -32,6 +32,7 @@ export const Authorization = async (req, res, next) => {
     const publicKey = await getPublicKey();
     const { payload } = await jwtVerify(token, publicKey, {
       issuer: process.env.ISSUER,
+      audience: process.env.RESOURCE_SERVER_AUDIENCE,
     });
     req.user = payload;
     next();
