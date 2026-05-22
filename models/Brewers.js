@@ -18,6 +18,10 @@ const BrewerSchema = new mongoose.Schema(
       bean:   { type: mongoose.Schema.Types.ObjectId, ref: "bean" },
     },
     trackedParameters: { type: Map, default: {} },
+    Type: {
+      type: String,
+      enum: ["immersion", "espresso", "Perculation"],
+    },
     filterType: {
       type: String,
       enum: ["paper", "metal", "N/A", "cloth"],

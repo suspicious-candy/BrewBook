@@ -36,9 +36,20 @@ export async function readBrewerByID (req, res) {
  * GET /brewers/filter/:filterType
  * Filters brewers by filterType field ("paper", "metal", "cloth", or "N/A").
  */
-export async function readBrewerByType(req, res) {
+export async function readBrewerByFilterType(req, res) {
   try{
     const Brewers = await Brewer.find({ "filterType": req.params.filterType });
+    res.status(200).json(Brewers) 
+  }
+  catch(error){
+    console.error("Error in the readBrewerByType",error);
+    res.status(500).json({message:"Internal Server Issue"})
+  }
+};
+
+export async function readBrewerByFilterType(req, res) {
+  try{
+    const Brewers = await Brewer.find({ "Type": req.params.Type });
     res.status(200).json(Brewers) 
   }
   catch(error){
