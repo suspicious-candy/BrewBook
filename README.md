@@ -13,7 +13,7 @@ A REST API backend for tracking coffee brewing sessions. Users can log beans, br
 | Database | MongoDB via Mongoose |
 | Auth | OAuth 2.0 + PKCE, RS256 JWTs (`jose`) |
 | Rate Limiting | Upstash Redis (`@upstash/ratelimit`) |
-| Security | `helmet`, `hpp`, `express-mongo-sanitize`, `compression` |
+| Security | `helmet`, `express-mongo-sanitize`, `compression` |
 | Validation | Mongoose schema validators |
 | Password hashing | `bcrypt` (installed — hashing not yet wired into user creation) |
 
@@ -70,9 +70,7 @@ npm run seed
 npm run scrape
 ```
 
-The API server starts on `PORT` (default `5001`) and the OAuth auth flow on `AUTH_SERVER_PORT` (default `3000`). Both are served from the same Express app on different ports.
-
-> **Architecture note:** Both ports share the same Express app instance, so all routes are technically reachable on both ports. For strict port segregation (OAuth on 3000, API on 5001), separate Express apps would be required.
+The API server starts on `PORT` (default `5001`) and the OAuth auth flow on `AUTH_SERVER_PORT` (default `3000`). They run as two separate Express app instances — `authApp` (OAuth routes only) and `resourceApp` (API routes only) — so each port only exposes its own routes.
 
 ---
 
@@ -414,7 +412,7 @@ Configured in [config/upstash.js](config/upstash.js) and applied globally in [Mi
 | Mongoose error mapping | All errors (including `ValidationError` 400s) are caught and returned as 500. Add an `error.name === "ValidationError"` check to return 400 with details. |
 | OAuth user authentication | `getDemoUser()` returns a hardcoded user. Real auth (DB lookup + bcrypt) is needed before production. |
 | OAuth token stores | Authorization codes and refresh tokens are stored in in-memory Maps — they are lost on every server restart. Replace with a persistent store (e.g., Redis or MongoDB) for production. |
-| Dual-port routing | Both `PORT` and `AUTH_SERVER_PORT` are served by the same Express app instance, so all routes are accessible on both ports. Use two separate Express apps for strict segregation. |
+| No write-endpoint auth | `POST`/`PUT`/`DELETE` on `/beans`, `/brewers`, `/recipes`, `/news` are unauthenticated — anyone can modify public catalog data. Add `Authorization` middleware to write routes before production. |
 | Dead code | `Routes/token.js` and `Routes/.well-known.js` are not mounted in `index.js` — their logic has been merged into `Routes/authorization.js`. |
 
 ---

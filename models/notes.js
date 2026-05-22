@@ -7,6 +7,7 @@ const NotesSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    User:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },
     Date: { type: Date, default: Date.now },
     trackedParameters: { type: Map, default: {} },
     Recipe:{ type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
