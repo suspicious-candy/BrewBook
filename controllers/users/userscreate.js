@@ -1,6 +1,6 @@
 import user from "../../models/User.js";
 import Brewer from "../../models/Brewers.js";
-
+import bcrypt from "bcrypt";
 /**
  * POST /users
  * Creates a new User document. If a Brewers array of numeric BrewerIDs is provided,
@@ -20,6 +20,9 @@ export async function createUsers(req, res) {
         return res.status(400).json({ message: `Brewers not found for IDs: ${missing.join(", ")}` });
       }
       brewerObjectIds = foundBrewers.map((b) => b._id);
+    }
+    if (rest.password) {
+     rest.password = await bcrypt.hash(rest.password, 12);
     }
 
     const newUser = new user({ ...rest, Brewers: brewerObjectIds });

@@ -6,13 +6,15 @@ import { getUsers, getUserByID, getUserByEmail, getUserByLevel } from "../contro
 import { updateUsers, updateUserBrewCount } from "../controllers/users/usersupdate.js";
 
 const router = express.Router();
+
+router.post("/", createUsers);
+
 router.use(Authorization);
 
 router.get("/", getUsers);
 router.get("/email/:email", getUserByEmail);
 router.get("/level/:level", getUserByLevel);
 router.get("/:id", getUserByID);
-router.post("/", createUsers);
 router.put("/:id", updateUsers);
 router.patch("/:id/brewcount", updateUserBrewCount);
 router.delete("/:id", deleteUsers);

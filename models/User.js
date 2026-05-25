@@ -28,8 +28,6 @@ const UserSchema = new mongoose.Schema(
           password:{
               type: String,
               required : true,
-              maxlength:50,
-              minlength: 10,
           },
           Brewers:{
                type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Brewer" }],

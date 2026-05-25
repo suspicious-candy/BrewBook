@@ -1,5 +1,6 @@
 import user from "../../models/User.js";
 import Brewer from "../../models/Brewers.js";
+import bcrypt from "bcrypt";
 
 /**
  * PUT /users/:id
@@ -22,6 +23,9 @@ export async function updateUsers(req, res) {
       }
       rest.Brewers = foundBrewers.map((b) => b._id);
     }
+    if (rest.password) {
+         rest.password = await bcrypt.hash(rest.password, 12);
+        }
 
     const updatedUser = await user.findOneAndUpdate({ UserID: req.params.id }, rest, { new: true, runValidators: true });
     if (!updatedUser) return res.status(404).json({ message: "user not found" });

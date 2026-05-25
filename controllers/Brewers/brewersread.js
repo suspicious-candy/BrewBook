@@ -47,7 +47,7 @@ export async function readBrewerByFilterType(req, res) {
   }
 };
 
-export async function readBrewerByFilterType(req, res) {
+export async function readBrewerByType(req, res) {
   try{
     const Brewers = await Brewer.find({ "Type": req.params.Type });
     res.status(200).json(Brewers) 
