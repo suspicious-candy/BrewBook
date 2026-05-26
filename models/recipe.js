@@ -14,6 +14,7 @@ const PourSchema = new mongoose.Schema(
 const RecipeSchema = new mongoose.Schema(
   {
     ID:     { type: Number, required: true, unique: true },
+    Name:   { type: String, required: true, minlength: 2, maxlength: 80 },
     Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
     bean:   { type: mongoose.Schema.Types.ObjectId, ref: "bean" },
 

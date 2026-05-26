@@ -2,10 +2,13 @@ import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
       {
+        // Legacy numeric ID for the /oauth and /users/:id flows.
+        // Supabase-created users don't have one; sparse keeps the unique index
+        // from rejecting multiple null values.
         UserID:{
             type:Number,
-            required:true,
             unique: true,
+            sparse: true,
         },
           firstName:{
               type: String,
@@ -25,9 +28,10 @@ const UserSchema = new mongoose.Schema(
               maxlength:50,
               unique : true,
           },
+          // Only used by the legacy /oauth HTML login flow.
+          // Supabase handles auth for the mobile app, so this is optional.
           password:{
               type: String,
-              required : true,
           },
           Brewers:{
                type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Brewer" }],

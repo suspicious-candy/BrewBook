@@ -13,9 +13,25 @@ function identityQueryFor(ownerId, details = {}) {
   };
 }
 
+// Supabase JWTs identify users by UUID (`sub`) and email. The Mongo User
+// collection keys on its own ObjectId, so we resolve the Mongo user by
+// email before using their `_id` as the bean owner.
+async function resolveOwnerId(req) {
+  const email = req.user?.email;
+  if (!email) return null;
+  const user = await User.findOne({ email });
+  return user?._id ?? null;
+}
+
 export async function createBeans(req, res) {
   try {
-    const ownerId = req.user.sub;
+    const ownerId = await resolveOwnerId(req);
+    if (!ownerId) {
+      return res.status(404).json({
+        message: "No matching user profile found. Create a user record first.",
+      });
+    }
+
     const { details, ...rest } = req.body;
     const idQuery = identityQueryFor(ownerId, details);
 
@@ -34,13 +50,16 @@ export async function createBeans(req, res) {
     res.status(201).json(newBean);
   } catch (error) {
     if (error.code === 11000) {
-      const existing = await bean.findOne(identityQueryFor(req.user.sub, req.body?.details));
-      if (existing) {
-        await User.findByIdAndUpdate(req.user.sub, { $addToSet: { Beans: existing._id } });
-        return res.status(200).json(existing);
+      const ownerId = await resolveOwnerId(req);
+      if (ownerId) {
+        const existing = await bean.findOne(identityQueryFor(ownerId, req.body?.details));
+        if (existing) {
+          await User.findByIdAndUpdate(ownerId, { $addToSet: { Beans: existing._id } });
+          return res.status(200).json(existing);
+        }
       }
     }
     console.error("Error in createBeans", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 }
