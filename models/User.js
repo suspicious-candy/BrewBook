@@ -49,6 +49,10 @@ const UserSchema = new mongoose.Schema(
               enum: ["Bean Sprout", "Barista", "BrewMaster"],
               default: "Bean Sprout"
           },
+          Beans: {
+            type: [{ type: mongoose.Schema.Types.ObjectId, ref: "bean" }],
+            default: [],
+          },
           LoginData:{
               lastLogin: Date,
               totalBrewsLogged: Number,

@@ -1,4 +1,5 @@
 import bean from "../../models/Beans.js";
+import User from "../../models/User.js";
 
 /**
  * GET /beans
@@ -38,7 +39,7 @@ export async function readBeanByID (req, res) {
  */
 export async function readBeanByRoast(req, res) {
   try{
-    const beans = await bean.find({ "tasteProfile.Roast": req.params.roast });
+    const beans = await bean.find({ "details.tasteProfile.Roast": req.params.roast });
     res.status(200).json(beans)
   }
   catch(error){
@@ -53,7 +54,7 @@ export async function readBeanByRoast(req, res) {
  */
 export async function readBeanByVarietal(req, res) {
   try {
-    const beans = await bean.find({ Varietal: req.params.varietal });
+    const beans = await bean.find({ "details.Varietal": req.params.varietal });
     res.status(200).json(beans);
   } catch (error) {
     console.error("Error in readBeanByVarietal", error);
@@ -67,11 +68,28 @@ export async function readBeanByVarietal(req, res) {
  */
 export async function readBeanByOriginCountry(req, res) {
   try {
-    const beans = await bean.find({ "Origin.Country": req.params.country });
+    const beans = await bean.find({ "details.Origin.Country": req.params.country });
     res.status(200).json(beans);
   } catch (error) {
     console.error("Error in readBeanByOriginCountry", error);
     res.status(500).json({ message: "Internal Server Issue" });
   }
 };
+
+/**
+ * GET /beans/origin/:country
+ * Filters beans by their Origin.Country field (case-sensitive).
+ */
+export async function readBeanByEmail(req, res) {
+  try {
+    const foundUser = await User.findOne({ email: req.params.email });
+    if (!foundUser) return res.status(404).json({ message: "User not found" });
+
+    const beans = await bean.find({ _id: { $in: foundUser.Beans } });
+    res.status(200).json(beans);
+  } catch (error) {
+    console.error("Error in readBeanByEmail", error);
+    res.status(500).json({ message: "Internal Server Issue" });
+  }
+}
 

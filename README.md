@@ -11,11 +11,11 @@ A REST API backend for tracking coffee brewing sessions. Users can log beans, br
 | Runtime | Node.js (ESM) |
 | Framework | Express 5 |
 | Database | MongoDB via Mongoose |
-| Auth | OAuth 2.0 + PKCE, RS256 JWTs (`jose`) |
+| Auth | OAuth 2.0 + PKCE, RS256 JWTs (`jose`); resource server validates via Supabase JWKS |
 | Rate Limiting | Upstash Redis (`@upstash/ratelimit`) |
 | Security | `helmet`, `express-mongo-sanitize`, `compression` |
 | Validation | Mongoose schema validators |
-| Password hashing | `bcrypt` (installed — hashing not yet wired into user creation) |
+| Password hashing | `bcrypt` (OAuth login uses bcrypt; user creation stores plaintext — wire up hashing before production) |
 
 ---
 
@@ -26,6 +26,7 @@ A REST API backend for tracking coffee brewing sessions. Users can log beans, br
 - Node.js 18+
 - A MongoDB Atlas cluster (or local MongoDB)
 - An Upstash Redis database
+- A Supabase project (for resource server JWT verification)
 
 ### Install
 
@@ -44,15 +45,18 @@ Create a `.env` file in the `BrewBook/` directory (see `.env.example`):
 | `PORT` | Port for the main API server (default: `5001`) |
 | `AUTH_SERVER_PORT` | Port for the OAuth auth server (default: `3000`) |
 | `CLIENT_SERVER_PORT` | Port of the OAuth client app (used to whitelist redirect URI) |
-| `PRIVATE_KEY_PEM` | RS256 private key in PKCS#8 PEM format |
-| `PUBLIC_KEY_PEM` | RS256 public key in SPKI PEM format |
-| `ISSUER` | JWT issuer URL, e.g. `https://localhost:3000` |
+| `PRIVATE_KEY_PEM` | RS256 private key in PKCS#8 PEM format (used by the auth server to sign tokens) |
+| `PUBLIC_KEY_PEM` | RS256 public key in SPKI PEM format (exposed via JWKS endpoint) |
+| `ISSUER` | JWT issuer URL, e.g. `https://auth.example.com` |
 | `KEY_ID` | Key ID (`kid`) embedded in JWT headers and JWKS |
+| `RESOURCE_SERVER_AUDIENCE` | JWT audience claim set on every access token, e.g. `https://api.example.com` |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
 | `CLIENT_ORIGIN` | Allowed CORS origin for the API |
+| `SUPABASE_URL` | Supabase project URL — resource server fetches JWKS from `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` |
+| `SUPABASE_JWT_SECRET` | (Optional) Supabase JWT secret for legacy HS256 projects; omit to use asymmetric JWKS verification |
 
-> **Note:** `JWT_SECRET` / `jsonwebtoken` are not used — the implementation uses RS256 via `jose`.
+> **Note:** `JWT_SECRET` / `jsonwebtoken` are not used — the OAuth server signs tokens via RS256 with `jose`.
 
 ### Run
 
@@ -82,18 +86,18 @@ All endpoints return JSON. Errors follow `{ message: "..." }` or `{ error: "..."
 
 ### Users — `/users`
 
-> **Protected** — all operations require a valid Bearer token.
+Some operations are public; most require a valid Bearer token (see table below).
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/users` | Get all users |
-| `GET` | `/users/:id` | Get user by `UserID` |
-| `GET` | `/users/email/:email` | Get user by email |
-| `GET` | `/users/level/:level` | Get users by `userLevel` (`Bean Sprout`, `Barista`, `BrewMaster`) |
-| `POST` | `/users` | Create a new user |
-| `PUT` | `/users/:id` | Update a user by `UserID` |
-| `PATCH` | `/users/:id/brewcount` | Increment `totalBrewsLogged` by 1 and auto-update `userLevel` |
-| `DELETE` | `/users/:id` | Delete a user by `UserID` |
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/users` | Public | Create a new user |
+| `GET` | `/users/email/:email` | Public | Get user by email |
+| `GET` | `/users` | Required | Get all users |
+| `GET` | `/users/:id` | Required | Get user by `UserID` |
+| `GET` | `/users/level/:level` | Required | Get users by `userLevel` (`Bean Sprout`, `Barista`, `BrewMaster`) |
+| `PUT` | `/users/:id` | Required | Update a user by `UserID` |
+| `PATCH` | `/users/:id/brewcount` | Required | Increment `totalBrewsLogged` by 1 and auto-update `userLevel` |
+| `DELETE` | `/users/:id` | Required | Delete a user by `UserID` |
 
 **User levels** are automatically promoted based on `totalBrewsLogged`:
 - `Bean Sprout` → default
@@ -238,6 +242,16 @@ Seed 25 preset brewers (V60, AeroPress, Chemex, etc.) with `npm run seed`.
 
 ---
 
+### Dashboard — `/dashboard`
+
+> **Protected** — requires a valid Bearer token. Uses `req.user.email` from the decoded JWT to look up the authenticated user.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/dashboard` | Returns aggregated user data: profile, bean supply, last brew session, today's brew count, and streak |
+
+---
+
 ## OAuth 2.0 Authorization Server
 
 The auth server implements the **Authorization Code flow with PKCE (S256)**. It runs on `AUTH_SERVER_PORT` (default `3000`).
@@ -254,6 +268,12 @@ Client                    Auth Server (port 3000)
   |  &code_challenge=<S256>      |
   |  &code_challenge_method=S256 |
   |  &state=<random>             |
+  | ---------------------------> |
+  |                              |
+  |  <-- HTML login form         |
+  |                              |
+  |  POST /oauth/authorize       |
+  |  email=... password=...      |
   | ---------------------------> |
   |                              |
   | <-- 302 redirect with ?code  |
@@ -273,7 +293,8 @@ Client                    Auth Server (port 3000)
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/oauth/authorize` | Initiate authorization, redirects with `?code=` |
+| `GET` | `/oauth/authorize` | Renders the login form after validating OAuth/PKCE params |
+| `POST` | `/oauth/authorize` | Validates credentials (DB lookup + bcrypt), issues auth code, redirects to client |
 | `POST` | `/oauth/token` | Exchange code or refresh token for access token |
 | `GET` | `/.well-known/jwks.json` | RS256 public key in JWKS format for token verification |
 
@@ -322,7 +343,7 @@ Client                    Auth Server (port 3000)
 }
 ```
 
-Access tokens expire in **15 minutes**. Refresh tokens are single-use and rotated on every refresh.
+Access tokens expire in **15 minutes**. Refresh tokens are single-use and rotated on every refresh, with a 30-day TTL.
 
 ### Registered Clients
 
@@ -331,15 +352,11 @@ Clients are registered in [oauth/clients.js](oauth/clients.js). The default clie
 | Field | Value |
 |---|---|
 | `client_id` | `demo-client` |
-| `redirect_uri` | `https://localhost:<CLIENT_SERVER_PORT>/callback` |
+| `redirect_uri` | `{CLIENT_ORIGIN}/callback`, `brewbook://callback`, Postman OAuth callbacks |
 
 ### JWKS
 
-The RS256 public key is exposed at `GET /.well-known/jwks.json`. Consuming services use this to verify access tokens without needing the private key.
-
-### Demo User
-
-The `/oauth/authorize` endpoint currently returns a hardcoded demo user (`demo@example.com`). Replacing `getDemoUser()` in [Routes/authorization.js](Routes/authorization.js) with real credential validation is required before production use.
+The RS256 public key is exposed at `GET /.well-known/jwks.json`. Consuming services can use this to verify access tokens without needing the private key.
 
 ---
 
@@ -347,7 +364,7 @@ The `/oauth/authorize` endpoint currently returns a hardcoded demo user (`demo@e
 
 ### Token Verification
 
-`Middleware/auth.js` verifies incoming Bearer tokens using the **RS256** public key (`PUBLIC_KEY_PEM`). The key is loaded once and cached for the lifetime of the process. On success, the decoded JWT payload is available on `req.user`.
+`Middleware/auth.js` verifies incoming Bearer tokens against **Supabase's JWKS endpoint** (`{SUPABASE_URL}/auth/v1/.well-known/jwks.json`). If `SUPABASE_JWT_SECRET` is set, the middleware uses HS256 shared-secret verification instead (for legacy Supabase projects). On success, the decoded JWT payload is available on `req.user`.
 
 ```
 Authorization: Bearer <access_token>
@@ -355,12 +372,16 @@ Authorization: Bearer <access_token>
 
 If the token is missing, expired, or invalid the middleware returns `401 Unauthorized`.
 
+> **Note:** The resource server currently validates tokens issued by **Supabase Auth**. Tokens issued by the custom OAuth authorization server (above) use a different issuer and key — they are not validated by the resource server middleware unless `SUPABASE_URL` and the custom auth server point to the same JWKS.
+
 ### Protected vs Public Routes
 
 | Route prefix | Protected | Reason |
 |---|---|---|
-| `/users` | Yes — all operations | Personal account data |
+| `/users` (most operations) | Yes | Personal account data |
+| `/users` — `POST /` and `GET /email/:email` | No | Account creation and lookup |
 | `/notes` | Yes — all operations | Private tasting notes |
+| `/dashboard` | Yes — all operations | Aggregated personal data |
 | `/beans` | No | Public catalog |
 | `/brewers` | No | Public catalog |
 | `/recipes` | No | Public catalog |
@@ -374,17 +395,17 @@ Client (port 4000)
    │  1. GET /oauth/authorize?...&code_challenge=S256
    ▼
 Auth Server (port 3000)   ← /oauth/* routes
-   │  Issues RS256 JWT access_token + refresh_token
+   │  Serves login form; validates credentials via MongoDB + bcrypt
+   │  Issues RS256 JWT access_token + refresh_token (stored in Upstash Redis)
    │
    │  2. POST /oauth/token → { access_token }
    ▼
 Client stores token
    │
-   │  3. GET /users/1   Authorization: Bearer <token>
+   │  3. GET /dashboard   Authorization: Bearer <supabase_token>
    ▼
-Resource Server (port 5001)   ← /users /notes
-   │  Middleware/auth.js verifies RS256 token
-   │  using PUBLIC_KEY_PEM (never the private key)
+Resource Server (port 5001)   ← /users /notes /dashboard
+   │  Middleware/auth.js verifies token via Supabase JWKS
    ▼
    Response: 200 OK / 401 Unauthorized
 ```
@@ -395,9 +416,10 @@ Resource Server (port 5001)   ← /users /notes
 
 All routes are protected by a sliding-window rate limiter backed by Upstash Redis:
 
-- **Window:** 100 seconds
-- **Limit:** 5 requests per IP per window
+- **Window:** 60 seconds
+- **Limit:** 60 requests per IP per window
 - Exceeding the limit returns `429 Too Many Requests`
+- If Upstash is unreachable the error is forwarded to the Express error handler rather than blocking the request
 
 Configured in [config/upstash.js](config/upstash.js) and applied globally in [Middleware/rateLimiter.js](Middleware/rateLimiter.js).
 
@@ -407,11 +429,10 @@ Configured in [config/upstash.js](config/upstash.js) and applied globally in [Mi
 
 | Area | Detail |
 |---|---|
-| Password hashing | `bcrypt` is installed but passwords are stored as plaintext. Hash in `userscreate.js` and `usersupdate.js` before production. |
+| Password hashing | `bcrypt` is used for OAuth login verification but passwords are stored as plaintext during user creation. Hash in `userscreate.js` and `usersupdate.js` before production. |
 | Input validation | `zod` is installed but not wired up. Controllers pass `req.body` directly to Mongoose; Mongoose schema validators are the only validation layer. |
 | Mongoose error mapping | All errors (including `ValidationError` 400s) are caught and returned as 500. Add an `error.name === "ValidationError"` check to return 400 with details. |
-| OAuth user authentication | `getDemoUser()` returns a hardcoded user. Real auth (DB lookup + bcrypt) is needed before production. |
-| OAuth token stores | Authorization codes and refresh tokens are stored in in-memory Maps — they are lost on every server restart. Replace with a persistent store (e.g., Redis or MongoDB) for production. |
+| Auth server / resource server mismatch | The OAuth authorization server issues RS256 tokens; the resource server validates against Supabase JWKS. Wire these together (share JWKS or point the resource server at the auth server's JWKS) before production. |
 | No write-endpoint auth | `POST`/`PUT`/`DELETE` on `/beans`, `/brewers`, `/recipes`, `/news` are unauthenticated — anyone can modify public catalog data. Add `Authorization` middleware to write routes before production. |
 | Dead code | `Routes/token.js` and `Routes/.well-known.js` are not mounted in `index.js` — their logic has been merged into `Routes/authorization.js`. |
 
@@ -509,14 +530,15 @@ BrewBook/
 │   ├── oauth.js              # PKCE helpers (generateCode, sha256Base64url, base64url)
 │   └── upstash.js            # Upstash Redis rate limiter config
 ├── Middleware/
-│   ├── auth.js               # JWT Bearer token verification middleware (RS256)
-│   └── rateLimiter.js        # Global rate limiter (5 req / 100s per IP)
+│   ├── auth.js               # JWT Bearer token verification via Supabase JWKS
+│   └── rateLimiter.js        # Global rate limiter (60 req / 60s per IP)
 ├── Routes/
-│   ├── authorization.js      # OAuth: GET /authorize, POST /token, JWKS handler
+│   ├── authorization.js      # OAuth: GET /authorize, POST /authorize, POST /token, JWKS handler
 │   ├── .well-known.js        # Standalone JWKS router (not mounted — logic is in authorization.js)
 │   ├── token.js              # Standalone token router (not mounted — logic is in authorization.js)
 │   ├── Beans.js
 │   ├── Brewers.js
+│   ├── dashboard.js
 │   ├── news.js
 │   ├── notes.js
 │   ├── recipe.js
@@ -525,6 +547,7 @@ BrewBook/
 │   ├── Beans/                # BeansCreate, BeansRead, BeansUpdate, BeansDelete
 │   ├── Brewers/              # brewerscreate, brewersread, brewersupdate, brewersdelete
 │   ├── News/                 # newscreate, newsread, newsupdate, newsdelete
+│   ├── dashboard/            # dashboardget
 │   ├── notes/                # notescreate, notesgets, notesupdate, notesdelete
 │   ├── Recipes/              # recipescreate, recipesgets, recipesupdate, recipesdelete
 │   └── users/                # userscreate, usersgets, usersupdate, usersdelete
@@ -536,8 +559,8 @@ BrewBook/
 │   ├── notes.js
 │   └── recipe.js
 ├── oauth/
-│   ├── clients.js            # Registered OAuth clients (in-memory Map)
-│   └── store.js              # In-memory authorization code + refresh token stores
+│   ├── clients.js            # Registered OAuth clients
+│   └── store.js              # Upstash Redis stores for auth codes and refresh tokens
 └── scripts/
     ├── seed.js               # Seeds 25 preset brewers into MongoDB
     └── scraper.js            # Scrapes Wikipedia for brewer names and upserts them

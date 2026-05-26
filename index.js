@@ -8,6 +8,7 @@ import newsRoutes from "./Routes/news.js";
 import notesRoutes from "./Routes/notes.js";
 import recipesRoutes from "./Routes/recipe.js";
 import usersRoutes from "./Routes/users.js";
+import dashboardRoutes from "./Routes/dashboard.js";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import authorizationRoutes, { jwksHandler } from "./Routes/authorization.js";
@@ -79,6 +80,7 @@ resourceApp.use("/news", newsRoutes);
 resourceApp.use("/notes", notesRoutes);
 resourceApp.use("/recipes", recipesRoutes);
 resourceApp.use("/users", usersRoutes);
+resourceApp.use("/dashboard", dashboardRoutes);
 resourceApp.use(errorHandler);
 
 connectDb().then(() => {

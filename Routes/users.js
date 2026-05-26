@@ -8,11 +8,11 @@ import { updateUsers, updateUserBrewCount } from "../controllers/users/usersupda
 const router = express.Router();
 
 router.post("/", createUsers);
+router.get("/email/:email", getUserByEmail);
 
 router.use(Authorization);
 
 router.get("/", getUsers);
-router.get("/email/:email", getUserByEmail);
 router.get("/level/:level", getUserByLevel);
 router.get("/:id", getUserByID);
 router.put("/:id", updateUsers);
