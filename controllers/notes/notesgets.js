@@ -3,17 +3,24 @@ import Brewer from "../../models/Brewers.js";
 import bean from "../../models/Beans.js";
 import Recipe from "../../models/recipe.js";
 
+// Populate Recipe → { bean, Brewer } so list screens can read note.Recipe.bean.Name
+// and note.Recipe.Brewer.Name without doing a follow-up fetch.
+const RECIPE_POPULATE = {
+  path: "Recipe",
+  populate: [{ path: "bean" }, { path: "Brewer" }],
+};
+
 /**
  * GET /notes
  * Returns all Notes (tasting note) documents in the collection.
  */
 export async function getNotes(req, res) {
   try {
-    const notes = await Notes.find();
+    const notes = await Notes.find().populate(RECIPE_POPULATE).sort({ Date: -1 });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in the getNotes", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 };
 
@@ -24,12 +31,12 @@ export async function getNotes(req, res) {
  */
 export async function readNotesByID(req, res) {
   try {
-    const notes = await Notes.findOne({ ID: req.params.id });
+    const notes = await Notes.findOne({ ID: req.params.id }).populate(RECIPE_POPULATE);
     if (!notes) return res.status(404).json({ message: "Notes not found" });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in the readNotesByID", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 };
 
@@ -46,11 +53,13 @@ export async function readNotesByBrewer(req, res) {
     if (!brewer) return res.status(404).json({ message: "Brewer not found" });
     const recipes = await Recipe.find({ Brewer: brewer._id }, "_id");
     const recipeIds = recipes.map((r) => r._id);
-    const notes = await Notes.find({ Recipe: { $in: recipeIds } });
+    const notes = await Notes.find({ Recipe: { $in: recipeIds } })
+      .populate(RECIPE_POPULATE)
+      .sort({ Date: -1 });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in readNotesByBrewer", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 };
 
@@ -66,11 +75,13 @@ export async function readNotesByBean(req, res) {
     if (!BeanObj) return res.status(404).json({ message: "bean not found" });
     const recipes = await Recipe.find({ bean: BeanObj._id }, "_id");
     const recipeIds = recipes.map((r) => r._id);
-    const notes = await Notes.find({ Recipe: { $in: recipeIds } });
+    const notes = await Notes.find({ Recipe: { $in: recipeIds } })
+      .populate(RECIPE_POPULATE)
+      .sort({ Date: -1 });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in readNotesByBean", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 };
 
@@ -83,11 +94,13 @@ export async function readNotesByRecipe(req, res) {
   try {
     const recipeObj = await Recipe.findOne({ ID: req.params.id });
     if (!recipeObj) return res.status(404).json({ message: "Recipe not found" });
-    const notes = await Notes.find({ Recipe: recipeObj._id });
+    const notes = await Notes.find({ Recipe: recipeObj._id })
+      .populate(RECIPE_POPULATE)
+      .sort({ Date: -1 });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in readNotesByRecipe", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 };
 
@@ -100,10 +113,12 @@ export async function readNotesByMinRating(req, res) {
   try {
     const min = Number(req.params.min);
     if (isNaN(min)) return res.status(400).json({ message: "Invalid rating value" });
-    const notes = await Notes.find({ overallRating: { $gte: min } });
+    const notes = await Notes.find({ overallRating: { $gte: min } })
+      .populate(RECIPE_POPULATE)
+      .sort({ Date: -1 });
     res.status(200).json(notes);
   } catch (error) {
     console.error("Error in readNotesByMinRating", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 };

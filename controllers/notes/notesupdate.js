@@ -22,6 +22,6 @@ export async function updateNotes(req, res) {
     res.status(200).json(updatedNote);
   } catch (error) {
     console.error("Error in updateNotes", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 }

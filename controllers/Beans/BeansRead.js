@@ -85,11 +85,29 @@ export async function readBeanByEmail(req, res) {
     const foundUser = await User.findOne({ email: req.params.email });
     if (!foundUser) return res.status(404).json({ message: "User not found" });
 
+    // Lazy cleanup: drop beans that have been depleted (Quantity === 0)
+    // for more than a week. Beans the user just emptied stick around so
+    // they can refill them; only stale ones are removed.
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const stale = await bean.find({
+      _id: { $in: foundUser.Beans },
+      Quantity: 0,
+      depletedAt: { $ne: null, $lt: weekAgo },
+    }).select("_id");
+
+    if (stale.length) {
+      const staleIds = stale.map((b) => b._id);
+      await bean.deleteMany({ _id: { $in: staleIds } });
+      await User.findByIdAndUpdate(foundUser._id, {
+        $pull: { Beans: { $in: staleIds } },
+      });
+    }
+
     const beans = await bean.find({ _id: { $in: foundUser.Beans } });
     res.status(200).json(beans);
   } catch (error) {
     console.error("Error in readBeanByEmail", error);
-    res.status(500).json({ message: "Internal Server Issue" });
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
   }
 }
 

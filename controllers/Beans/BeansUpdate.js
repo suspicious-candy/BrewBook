@@ -18,6 +18,41 @@ export async function updateBeans(req, res) {
 }
 
 /**
+ * PATCH /beans/:id/consume
+ * Decrements a bean's Quantity by the number of grams in req.body.grams.
+ * Quantity is clamped at 0. Once it reaches 0 the bean is marked with a
+ * `depletedAt` timestamp so it can be auto-purged a week later. Restocking
+ * (a later update that brings Quantity above 0) clears the timestamp.
+ */
+export async function consumeBean(req, res) {
+  try {
+    const grams = Number(req.body?.grams);
+    if (!Number.isFinite(grams) || grams <= 0) {
+      return res.status(400).json({ message: "grams must be a positive number" });
+    }
+
+    const beanDoc = await bean.findOne({ beanId: req.params.id });
+    if (!beanDoc) return res.status(404).json({ message: "Bean not found" });
+
+    const current = beanDoc.Quantity ?? 0;
+    const next = Math.max(0, current - grams);
+
+    beanDoc.Quantity = next;
+    if (next === 0 && !beanDoc.depletedAt) {
+      beanDoc.depletedAt = new Date();
+    } else if (next > 0) {
+      beanDoc.depletedAt = null;
+    }
+    await beanDoc.save();
+
+    res.status(200).json(beanDoc);
+  } catch (error) {
+    console.error("Error in consumeBean", error);
+    res.status(500).json({ message: error.message ?? "Internal Server Issue" });
+  }
+}
+
+/**
  * PATCH /beans/:id/lastBrew
  * Sets the bean's lastBrew.note reference to the ObjectId of the Note
  * whose numeric ID matches req.body.noteId.

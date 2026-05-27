@@ -62,6 +62,12 @@ const beanSchema = new mongoose.Schema(
     Quantity: {
       type: Number,
     },
+    // Set when Quantity is first decremented to 0. Used to auto-purge
+    // beans that have been empty for more than a week.
+    depletedAt: {
+      type: Date,
+      default: null,
+    },
     preferences: {
       recipe: { type: mongoose.Schema.Types.ObjectId, ref: "Recipe" },
       Brewer: { type: mongoose.Schema.Types.ObjectId, ref: "Brewer" },
