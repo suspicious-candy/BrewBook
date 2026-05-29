@@ -45,9 +45,32 @@ export async function createNotes(req, res) {
     // dashboard updates as soon as the brew starts, even before tasting notes
     // are logged.
     if (userDoc) {
+      const now = new Date();
+      const startOfDay = (d) => {
+        const x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        return x;
+      };
+
+      const prevLogin = userDoc.LoginData?.lastLogin;
+      const prevStreak = userDoc.LoginData?.streak ?? 0;
+
+      let streak;
+      if (!prevLogin) {
+        streak = 1;
+      } else {
+        const dayDiff = Math.round(
+          (startOfDay(now) - startOfDay(prevLogin)) / 86400000
+        );
+        if (dayDiff === 0) streak = prevStreak || 1; // same day, keep streak
+        else if (dayDiff === 1) streak = prevStreak + 1; // consecutive day
+        else streak = 1; // gap in days, reset
+      }
+
       await User.findByIdAndUpdate(userDoc._id, {
         LastBrew: savedNote._id,
-        "LoginData.lastLogin": new Date(),
+        "LoginData.lastLogin": now,
+        "LoginData.streak": streak,
       });
     }
 

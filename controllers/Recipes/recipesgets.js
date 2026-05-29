@@ -24,7 +24,9 @@ export async function getRecipes (req, res) {
  */
 export async function getRecipesByID (req, res) {
   try{
-    const Recipes = await Recipe.findOne({ID:req.params.id});
+    const Recipes = await Recipe.findOne({ID:req.params.id})
+      .populate("Brewer")
+      .populate("bean");
     if (!Recipes) return res.status(404).json({ message: "Recipe not found" });
     res.status(200).json(Recipes);
   }
